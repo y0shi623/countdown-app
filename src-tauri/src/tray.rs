@@ -13,7 +13,6 @@ pub fn setup_tray(app: &App) -> tauri::Result<()> {
     TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
-
         // 👇 トレイアイコン自体のイベント
         .on_tray_icon_event(|tray, event| {
             if let TrayIconEvent::DoubleClick { .. } = event {
@@ -24,21 +23,18 @@ pub fn setup_tray(app: &App) -> tauri::Result<()> {
                 }
             }
         })
-
         // 👇 メニュークリックはこっち
-        .on_menu_event(|app, event| {
-            match event.id().as_ref() {
-                "show" => {
-                    if let Some(w) = app.get_webview_window("main") {
-                        w.show().ok();
-                        w.set_focus().ok();
-                    }
+        .on_menu_event(|app, event| match event.id().as_ref() {
+            "show" => {
+                if let Some(w) = app.get_webview_window("main") {
+                    w.show().ok();
+                    w.set_focus().ok();
                 }
-                "quit" => {
-                    app.exit(0);
-                }
-                _ => {}
             }
+            "quit" => {
+                app.exit(0);
+            }
+            _ => {}
         })
         .build(app)?;
 

@@ -4,7 +4,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use tauri::{AppHandle, State, Emitter};
+use tauri::{AppHandle, Emitter, State};
 use tauri_plugin_notification::NotificationExt;
 
 /// タイマー状態
@@ -34,8 +34,7 @@ pub fn start_timer(
     app: AppHandle,
 ) {
     let total_seconds = minutes * 60;
-    let notify_seconds: Vec<u64> =
-        notify_minutes.into_iter().map(|m| m * 60).collect();
+    let notify_seconds: Vec<u64> = notify_minutes.into_iter().map(|m| m * 60).collect();
 
     {
         let mut timer = state.lock().unwrap();
@@ -58,7 +57,6 @@ pub fn start_timer(
 
         app.emit("timer_tick", remaining).ok();
     }
-    
 
     std::thread::spawn(move || {
         loop {
@@ -71,8 +69,7 @@ pub fn start_timer(
                 None => break,
             };
 
-            let remaining =
-                end_at.saturating_duration_since(Instant::now()).as_secs();
+            let remaining = end_at.saturating_duration_since(Instant::now()).as_secs();
 
             // ★ notify_at を先に clone（E0502対策）
             let notify_list = timer.notify_at.clone();
@@ -83,7 +80,7 @@ pub fn start_timer(
 
                     app.notification()
                         .builder()
-                        .title("Pomodoro Timer")
+                        .title("カウントダウンタイマー")
                         .body(format!("残り {} 分", min))
                         .show()
                         .ok();
@@ -95,7 +92,7 @@ pub fn start_timer(
             if remaining == 0 {
                 app.notification()
                     .builder()
-                    .title("Pomodoro Timer")
+                    .title("カウントダウンタイマー")
                     .body("時間になりました！")
                     .show()
                     .ok();
