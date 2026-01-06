@@ -1,14 +1,20 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+mod timer;
+mod tray;
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
+use std::sync::{Arc, Mutex};
+use timer::{SharedTimer, TimerState};
+
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .manage(Arc::new(Mutex::new(TimerState::new())) as SharedTimer)
+        .setup(|app| {
+            tray::setup_tray(app)?;
+            Ok(())
+        })
+        .plugin(tauri_plugin_notification::init())
+        .invoke_handler(tauri::generate_handler![
+            timer::start_timer,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
