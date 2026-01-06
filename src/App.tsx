@@ -1,4 +1,4 @@
-import { Container, Stack,  Button, Typography, Box, CssBaseline, IconButton, } from "@mui/material";
+import { Container, Stack,  Button, Typography, CssBaseline, IconButton, } from "@mui/material";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import CloseIcon from '@mui/icons-material/Close';
 import MinimizeIcon from '@mui/icons-material/Minimize';
