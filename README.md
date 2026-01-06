@@ -1,17 +1,3 @@
-# 目標
-行動記録・行動意思決定を起点としてタスクの管理とスケジュールの管理を行う
-
-
-# 技術スタック
-
-- tauri
-- rust
-- react.js
-- typescript
-- vite
-- mui
-- zustand
-
 # Tauri + React + Typescript
 
 This template should help get you started developing with Tauri, React and Typescript in Vite.
