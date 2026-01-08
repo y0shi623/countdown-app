@@ -20,7 +20,7 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_notification::init())
-        .invoke_handler(tauri::generate_handler![timer::start_timer,])
+        .invoke_handler(tauri::generate_handler![timer::start_timer,timer::pause_timer, timer::resume_timer, timer::stop_timer])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
