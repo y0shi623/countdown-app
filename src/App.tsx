@@ -1,5 +1,5 @@
-import { Container, Stack,  Button, Typography, CssBaseline, IconButton, ButtonPropsColorOverrides, } from "@mui/material";
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { Container, Stack,  Button, Typography, CssBaseline, IconButton, ButtonPropsColorOverrides, Tooltip, } from "@mui/material";
+import PlayIcon from '@mui/icons-material/PlayArrow';
 import CloseIcon from '@mui/icons-material/Close';
 import PauseIcon from '@mui/icons-material/Pause';
 import StopIcon from '@mui/icons-material/Stop';
@@ -9,64 +9,28 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { OverridableStringUnion } from "@mui/types";
-
 
 type TimerStatus = "Idle" | "Running" | "Paused";
 
-type ButtonColorType = OverridableStringUnion<'inherit' | 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning', ButtonPropsColorOverrides>;
-
-function App() {
-  const [minute, setMinute] = useState<number>(1);
+const useTimer = () => {
   const [leaveSec, setLeaveSec] = useState<number>(0);
-  const [timerStatus, setTimerStatus] = useState<TimerStatus>('Idle');
-
-  const startTimer = async () => {
+  const [status, setStatus] = useState<TimerStatus>('Idle');
+  const start = async (minutes: number, notifyMinutes: number[]) => {
     await invoke("start_timer", {
-      minutes: minute,
-      notifyMinutes: [],
+      minutes,
+      notifyMinutes,
     });
   };
-  const pauseTimer = () => {
-    invoke("pause_timer");
-  }
-  const resumeTimer = () => {
-    invoke("resume_timer");
-  }
-
-  const buttonProps = {
-    Idle: {
-      color: 'primary',
-      startIcon: <PlayArrowIcon/>,
-      label: '開始',
-      onClick: () => {
-        startTimer();
-      },
-    },
-    Running: {
-      color: 'secondary',
-      startIcon: <PauseIcon/>,
-      label: '停止',
-      onClick: () => {
-        pauseTimer();
-      },
-    },
-    Paused: {
-      color: 'primary',
-      startIcon: <PlayArrowIcon/>,
-      label: '再開',
-      onClick: () => {
-        resumeTimer();
-      },
-    },
-  };
+  const pause = () => invoke("pause_timer");
+  const resume = () => invoke("resume_timer");
+  const stop = () => invoke("stop_timer");
 
   useEffect(() => {
     const timerTieckListener = listen<number>("timer_tick", (event) => {
       setLeaveSec(event.payload);
     });
     const timerStatusListener = listen<TimerStatus>("timer_status", (event) => {
-      setTimerStatus(event.payload);
+      setStatus(event.payload);
     });
 
     return () => {
@@ -74,6 +38,21 @@ function App() {
       timerStatusListener.then((unlisten) => unlisten());
     };
   }, []);
+
+  return {
+    leaveSec,
+    status,
+    start,
+    pause,
+    resume,
+    stop
+  }
+}
+
+function App() {
+  const [minute, setMinute] = useState<number>(1);
+
+  const timer = useTimer();
 
   const appWindow = getCurrentWindow();
   
@@ -97,33 +76,52 @@ function App() {
         <Stack spacing={2} padding={2}>
           <Stack direction={'row'} justifyContent={'space-between'} alignItems={'center'}>
             <Stack direction={'row'} spacing={1} alignItems={'center'}>
-              <Button
-                variant="contained"
-                color={buttonProps[timerStatus].color as ButtonColorType}
-                startIcon={buttonProps[timerStatus].startIcon}
-                onClick={buttonProps[timerStatus].onClick}
-              >
-                {buttonProps[timerStatus].label}
-              </Button>
-              <Button
-                disabled={timerStatus === 'Idle'}
-                variant="contained"
-                color="error"
-                startIcon={<StopIcon/>}
-                onClick={() => {invoke('stop_timer')}}
-              >
-                停止
-              </Button>
+              <Tooltip title={"開始・再開"} placement={'top'}>
+                <Button
+                  disabled={timer.status === 'Running'}
+                  variant="contained"
+                  color={'primary'}
+                  onClick={() => {
+                    if (timer.status === 'Idle') {
+                      timer.start(minute, []);
+                    } else if (timer.status === 'Paused') {
+                      timer.resume();
+                    }
+                  }}
+                >
+                  <PlayIcon/>
+                </Button>
+              </Tooltip>
+              <Tooltip title="一時停止" placement={'top'}>
+                <Button
+                  disabled={timer.status !== 'Running'}
+                  variant="contained"
+                  color={'secondary'}
+                  onClick={() => timer.pause()}
+                >
+                  <PauseIcon/>
+                </Button>
+              </Tooltip>
+              <Tooltip title="停止" placement={'top'}>
+                <Button
+                  disabled={timer.status === 'Idle'}
+                  variant="contained"
+                  color="error"
+                  onClick={() => timer.stop()}
+                >
+                  <StopIcon/>
+                </Button>
+              </Tooltip>
             </Stack>
             <Typography>
               残り&nbsp;
-              {String(Math.floor(leaveSec / 60)).padStart(2, '0')}&nbsp;分
+              {String(Math.floor(timer.leaveSec / 60)).padStart(2, '0')}&nbsp;分
               &nbsp;
-              {String(leaveSec % 60).padStart(2, '0')}&nbsp;秒
+              {String(timer.leaveSec % 60).padStart(2, '0')}&nbsp;秒
             </Typography>
           </Stack>
           <NumberField
-            disabled={timerStatus !== 'Idle'}
+            disabled={timer.status !== 'Idle'}
             label="タイマー（分）"
             value={minute}
             max={300}
