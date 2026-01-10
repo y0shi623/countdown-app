@@ -8,6 +8,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import InputLabel from '@mui/material/InputLabel';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { Stack } from '@mui/material';
 
 /**
  * This component is a placeholder for FormControl to correctly set the shrink label state on SSR.
@@ -24,94 +25,100 @@ export default function NumberField({
   size = 'medium',
   max,
   min,
+  helperText,
   ...other
 }: BaseNumberField.Root.Props & {
   label?: React.ReactNode;
   size?: 'small' | 'medium';
   error?: boolean;
+  helperText?: string;
 }) {
   let id = React.useId();
   if (idProp) {
     id = idProp;
   }
   return (
-    <BaseNumberField.Root
-      max={max}
-      min={min}
-      {...other}
-      render={(props, state) => (
-        <FormControl
-          size={size}
-          ref={props.ref}
-          disabled={state.disabled}
-          required={state.required}
-          error={error}
-          variant="outlined"
-        >
-          {props.children}
-        </FormControl>
-      )}
-    >
-      <SSRInitialFilled {...other} />
-      <InputLabel htmlFor={id}>{label}</InputLabel>
-      <BaseNumberField.Input
-        id={id}
+    <Stack pt={1}>
+      <BaseNumberField.Root
+        max={max}
+        min={min}
+        {...other}
         render={(props, state) => (
-          <OutlinedInput
-            label={label}
-            inputRef={props.ref}
-            value={state.inputValue}
-            onBlur={props.onBlur}
-            onChange={props.onChange}
-            onKeyUp={props.onKeyUp}
-            onKeyDown={props.onKeyDown}
-            onFocus={props.onFocus}
-            slotProps={{
-              input: props,
-            }}
-            endAdornment={
-              <InputAdornment
-                position="end"
-                sx={{
-                  flexDirection: 'column',
-                  maxHeight: 'unset',
-                  alignSelf: 'stretch',
-                  borderLeft: '1px solid',
-                  borderColor: 'divider',
-                  ml: 0,
-                  '& button': {
-                    py: 0,
-                    flex: 1,
-                    borderRadius: 0.5,
-                  },
-                }}
-              >
-                <BaseNumberField.Increment
-                  render={<IconButton size={size} aria-label="Increase" />}
-                >
-                  <KeyboardArrowUpIcon
-                    fontSize={size}
-                    sx={{ transform: 'translateY(2px)' }}
-                  />
-                </BaseNumberField.Increment>
-
-                <BaseNumberField.Decrement
-                  render={<IconButton size={size} aria-label="Decrease" />}
-                >
-                  <KeyboardArrowDownIcon
-                    fontSize={size}
-                    sx={{ transform: 'translateY(-2px)' }}
-                  />
-                </BaseNumberField.Decrement>
-              </InputAdornment>
-            }
-            sx={{ pr: 0 }}
-          />
+          <FormControl
+            size={size}
+            ref={props.ref}
+            disabled={state.disabled}
+            required={state.required}
+            error={error}
+            variant="outlined"
+          >
+            {props.children}
+          </FormControl>
         )}
-      />
-      <FormHelperText sx={{ ml: 0, '&:empty': { mt: 0 } }}>
-        {min}から {max}の間で入力してください
-      </FormHelperText>
-    </BaseNumberField.Root>
+      >
+        <SSRInitialFilled {...other} />
+        <InputLabel htmlFor={id}>{label}</InputLabel>
+        <BaseNumberField.Input
+          id={id}
+          render={(props, state) => (
+            <OutlinedInput
+              label={label}
+              inputRef={props.ref}
+              value={state.inputValue}
+              onBlur={props.onBlur}
+              onChange={props.onChange}
+              onKeyUp={props.onKeyUp}
+              onKeyDown={props.onKeyDown}
+              onFocus={props.onFocus}
+              slotProps={{
+                input: props,
+              }}
+              endAdornment={
+                <InputAdornment
+                  position="end"
+                  sx={{
+                    flexDirection: 'column',
+                    maxHeight: 'unset',
+                    alignSelf: 'stretch',
+                    borderLeft: '1px solid',
+                    borderColor: 'divider',
+                    ml: 0,
+                    '& button': {
+                      py: 0,
+                      flex: 1,
+                      borderRadius: 0.5,
+                    },
+                  }}
+                >
+                  <BaseNumberField.Increment
+                    render={<IconButton size={size} aria-label="Increase" />}
+                  >
+                    <KeyboardArrowUpIcon
+                      fontSize={size}
+                      sx={{ transform: 'translateY(2px)' }}
+                    />
+                  </BaseNumberField.Increment>
+
+                  <BaseNumberField.Decrement
+                    render={<IconButton size={size} aria-label="Decrease" />}
+                  >
+                    <KeyboardArrowDownIcon
+                      fontSize={size}
+                      sx={{ transform: 'translateY(-2px)' }}
+                    />
+                  </BaseNumberField.Decrement>
+                </InputAdornment>
+              }
+              sx={{ pr: 0 }}
+            />
+          )}
+        />
+        {helperText && (
+          <FormHelperText sx={{ ml: 0, '&:empty': { mt: 0 } }}>
+            {helperText}
+          </FormHelperText>
+        )}
+      </BaseNumberField.Root>
+    </Stack>
   );
 }

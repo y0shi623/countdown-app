@@ -14,10 +14,12 @@
       {
         "title": "app",
         "width": 400,
-        "height": 200,
+        "height": 275,
         "resizable": false,
         "maximizable": false,
-        "decorations": false
+        "decorations": false,
+        "transparent": true,
+        "shadow": false
       }
     ],
     "security": {
@@ -33,6 +35,22 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "allowDowngrades": true,
+      "certificateThumbprint": null,
+      "digestAlgorithm": null,
+      "nsis": null,
+      "signCommand": null,
+      "timestampUrl": null,
+      "tsp": false,
+      "webviewInstallMode": {
+        "silent": true,
+        "type": "downloadBootstrapper"
+      },
+      "wix": {
+        "language": "ja-JP"
+      }
+    }
   }
 }
