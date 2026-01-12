@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { TimerClockIcon } from "./Icon";
 
 type TimerStatus = "Idle" | "Running" | "Paused";
 
@@ -80,12 +81,15 @@ const TimerApp = () => {
   }
   
   return (
-    <Stack sx={{borderRadius: '8px', border: '1px solid rgba(0, 0, 0, 0.4)'}}>
+    <Stack sx={{borderRadius: '8px', border: '1px solid rgba(130, 128, 128, 0.9)'}}>
       <Stack sx={{background: '#fff', borderRadius: '8px'}}>
-        <Stack data-tauri-drag-region bgcolor={'primary.main'} color={'#FFF'} padding={1} direction={'row'} justifyContent={'space-between'} alignItems={'center'} borderRadius={'8px 8px 0 0'} >
-          <Typography fontSize={'12px'}>
-            カウントダウンタイマー
-          </Typography>
+        <Stack data-tauri-drag-region bgcolor={'#454545ff'} color={'#ffffffe8'} padding={1} direction={'row'} justifyContent={'space-between'} alignItems={'center'} borderRadius={'8px 8px 0 0'} >
+          <Stack direction={'row'} spacing={1} alignItems={'center'}>
+            <TimerClockIcon strokeWidth={3} iconSize={18}/>
+            <Typography fontSize={'12px'}>
+              カウントダウンタイマー
+            </Typography>
+          </Stack>
           <Stack direction={'row'} spacing={1} alignItems={'center'}>
             <IconButton
               size="small"
@@ -93,6 +97,7 @@ const TimerApp = () => {
               onClick={() => {
                 setIsSimpleBar(!isSimpleBar);
               }}
+              color="inherit"
             >
               <Box
                 sx={{
@@ -103,13 +108,13 @@ const TimerApp = () => {
               >
                 <Zoom in={isSimpleBar}>
                   <Box sx={{ position: "absolute", inset: 0 }}>
-                    <CloseFullscreenIcon sx={{width: '18px', height: '18px', color: '#fff'}}/>
+                    <OpenInFullIcon sx={{width: '18px', height: '18px'}}/>
                   </Box>
                 </Zoom>
 
                 <Zoom in={!isSimpleBar}>
                   <Box sx={{ position: "absolute", inset: 0 }}>
-                    <OpenInFullIcon sx={{width: '18px', height: '18px', color: '#fff'}}/>
+                    <CloseFullscreenIcon sx={{width: '18px', height: '18px'}}/>
                   </Box>
                 </Zoom>
               </Box>
@@ -121,21 +126,21 @@ const TimerApp = () => {
                 setIsAlwaysOnTop(!isAlwaysOnTop);
                 appWindow.setAlwaysOnTop(!isAlwaysOnTop);
               }}
+              color="inherit"
             >
               <PushPinIcon
                 sx={{
                   width: '18px', height: '18px',
-                  color: '#fff',
                   transform: isAlwaysOnTop ? 'rotate(0deg)' : 'rotate(-45deg)',
                   transition: "transform 0.2s ease",
                 }}
               />
             </IconButton>
-            <IconButton size="small" sx={{padding:0}} onClick={() => appWindow.minimize()}>
-              <MinimizeIcon sx={{width: '18px', height: '18px', color: '#fff'}}/>
+            <IconButton size="small" color='inherit' sx={{padding:0}} onClick={() => appWindow.minimize()}>
+              <MinimizeIcon sx={{width: '18px', height: '18px'}}/>
             </IconButton>
-            <IconButton size='small' sx={{padding: 0}} onClick={() => appWindow.hide()}>
-              <CloseIcon sx={{width: '18px', height: '18px', color: '#fff'}}/>
+            <IconButton size='small' color='inherit' sx={{padding: 0}} onClick={() => appWindow.hide()}>
+              <CloseIcon sx={{width: '18px', height: '18px'}}/>
             </IconButton>
           </Stack>
         </Stack>
@@ -245,22 +250,33 @@ const TimerApp = () => {
 
 const App = () => {
   const theme = createTheme({
-  components: {
-    MuiCssBaseline: {
-      styleOverrides: {
-        html: {
-          backgroundColor: "transparent",
+    palette: {
+      primary: {
+        main: "#24C8A6",
+        contrastText: "#ffffff",
+      },
+      secondary: {
+        main: "#f4d472ff",
+        contrastText: "#fff",
+      },
+
+    },
+    components: {
+      MuiCssBaseline: {
+        styleOverrides: {
+          html: {
+            backgroundColor: "transparent",
+          },
+          body: {
+            backgroundColor: "transparent",
+          },
+          "#root": {
+            backgroundColor: "transparent",
+          }
         },
-        body: {
-          backgroundColor: "transparent",
-        },
-        "#root": {
-          backgroundColor: "transparent",
-        }
       },
     },
-  },
-});
+  });
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline/>

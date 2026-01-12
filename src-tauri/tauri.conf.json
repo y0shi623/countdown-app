@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "app",
+        "title": "countdown-app",
         "width": 400,
-        "height": 275,
+        "height": 319,
         "resizable": false,
         "maximizable": false,
         "decorations": false,
