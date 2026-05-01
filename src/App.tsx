@@ -14,6 +14,30 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { TimerClockIcon } from "./Icon";
 
+const appWindow = getCurrentWindow();
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#24C8A6",
+      contrastText: "#ffffff",
+    },
+    secondary: {
+      main: "#f4d472ff",
+      contrastText: "#fff",
+    },
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        html: { backgroundColor: "transparent" },
+        body: { backgroundColor: "transparent" },
+        "#root": { backgroundColor: "transparent" },
+      },
+    },
+  },
+});
+
 type TimerStatus = "Idle" | "Running" | "Paused";
 
 const useTimer = () => {
@@ -30,16 +54,20 @@ const useTimer = () => {
   const stop = () => invoke("stop_timer");
 
   useEffect(() => {
-    const timerTieckListener = listen<number>("timer_tick", (event) => {
+    let unlistenTick: (() => void) | undefined;
+    let unlistenStatus: (() => void) | undefined;
+
+    listen<number>("timer_tick", (event) => {
       setLeaveSec(event.payload);
-    });
-    const timerStatusListener = listen<TimerStatus>("timer_status", (event) => {
+    }).then((fn) => { unlistenTick = fn; });
+
+    listen<TimerStatus>("timer_status", (event) => {
       setStatus(event.payload);
-    });
+    }).then((fn) => { unlistenStatus = fn; });
 
     return () => {
-      timerTieckListener.then((unlisten) => unlisten());
-      timerStatusListener.then((unlisten) => unlisten());
+      unlistenTick?.();
+      unlistenStatus?.();
     };
   }, []);
 
@@ -56,13 +84,11 @@ const useTimer = () => {
 const TimerApp = () => {
   const [minutes, setMinutes] = useState<number>(1);
   const [notifyLeaveMinutes, setNotifyLeaveMinutes] = useState<(number|undefined)[]>([undefined, undefined]);
-  const [notifyLeaveMinutesErros, setNotifyLeaveMinutesErros] = useState<(string | undefined)[]>([undefined, undefined]);
+  const [notifyLeaveMinutesErrors, setNotifyLeaveMinutesErrors] = useState<(string | undefined)[]>([undefined, undefined]);
   const [isAlwaysOnTop, setIsAlwaysOnTop] = useState<boolean>(false);
   const [isSimpleBar, setIsSimpleBar] = useState<boolean>(false);
 
   const timer = useTimer();
-
-  const appWindow = getCurrentWindow();
 
   const validateTimerSetting = () => {
     // タイマー設定が残り時間通知設定より値が小さくないか？
@@ -72,12 +98,12 @@ const TimerApp = () => {
       return 'タイマーの設定値よりも小さな値で設定してください';
     });
 
-    setNotifyLeaveMinutesErros([...errors]);
+    setNotifyLeaveMinutesErrors([...errors]);
     return errors.find((v) => v !== undefined) === undefined;
   };
 
   const resetErrorState = () => {
-    setNotifyLeaveMinutesErros([undefined, undefined]);
+    setNotifyLeaveMinutesErrors([undefined, undefined]);
   }
   
   return (
@@ -122,9 +148,12 @@ const TimerApp = () => {
             <IconButton
               size="small"
               sx={{padding:0}}
-              onClick={() => {
-                setIsAlwaysOnTop(!isAlwaysOnTop);
-                appWindow.setAlwaysOnTop(!isAlwaysOnTop);
+              onClick={async () => {
+                const next = !isAlwaysOnTop;
+                try {
+                  await appWindow.setAlwaysOnTop(next);
+                  setIsAlwaysOnTop(next);
+                } catch {}
               }}
               color="inherit"
             >
@@ -220,8 +249,8 @@ const TimerApp = () => {
                     newList[0] = v ?? undefined;
                     setNotifyLeaveMinutes(newList);
                   }}
-                  helperText={notifyLeaveMinutesErros[0]}
-                  error={notifyLeaveMinutesErros[0] !== undefined}
+                  helperText={notifyLeaveMinutesErrors[0]}
+                  error={notifyLeaveMinutesErrors[0] !== undefined}
                 />
                 <NumberField
                   disabled={timer.status !== 'Idle'}
@@ -235,8 +264,8 @@ const TimerApp = () => {
                     newList[1] = v ?? undefined;
                     setNotifyLeaveMinutes(newList);
                   }}
-                  helperText={notifyLeaveMinutesErros[1]}
-                  error={notifyLeaveMinutesErros[1] !== undefined}
+                  helperText={notifyLeaveMinutesErrors[1]}
+                  error={notifyLeaveMinutesErrors[1] !== undefined}
                 />
               </Stack>
             </Collapse>
@@ -249,34 +278,6 @@ const TimerApp = () => {
 
 
 const App = () => {
-  const theme = createTheme({
-    palette: {
-      primary: {
-        main: "#24C8A6",
-        contrastText: "#ffffff",
-      },
-      secondary: {
-        main: "#f4d472ff",
-        contrastText: "#fff",
-      },
-
-    },
-    components: {
-      MuiCssBaseline: {
-        styleOverrides: {
-          html: {
-            backgroundColor: "transparent",
-          },
-          body: {
-            backgroundColor: "transparent",
-          },
-          "#root": {
-            backgroundColor: "transparent",
-          }
-        },
-      },
-    },
-  });
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline/>
