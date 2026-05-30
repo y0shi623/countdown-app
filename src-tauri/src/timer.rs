@@ -4,9 +4,48 @@ use std::{
     time::{Duration, Instant},
 };
 
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_notification::NotificationExt;
 use serde::Serialize;
+
+#[cfg(target_os = "windows")]
+mod win32 {
+    #[repr(C)]
+    pub struct FLASHWINFO {
+        pub cb_size: u32,
+        pub hwnd: isize,
+        pub dw_flags: u32,
+        pub u_count: u32,
+        pub dw_timeout: u32,
+    }
+    pub const FLASHW_TRAY: u32 = 0x00000002;
+    pub const FLASHW_TIMERNOFG: u32 = 0x0000000C;
+
+    #[link(name = "user32")]
+    extern "system" {
+        pub fn FlashWindowEx(pfwi: *const FLASHWINFO) -> i32;
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn flash_taskbar(app: &AppHandle) {
+    use win32::*;
+    if let Some(window) = app.get_webview_window("main") {
+        if let Ok(hwnd) = window.hwnd() {
+            let info = FLASHWINFO {
+                cb_size: std::mem::size_of::<FLASHWINFO>() as u32,
+                hwnd: hwnd.0 as isize,
+                dw_flags: FLASHW_TRAY | FLASHW_TIMERNOFG,
+                u_count: 0,
+                dw_timeout: 0,
+            };
+            unsafe { FlashWindowEx(&info) };
+        }
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn flash_taskbar(_app: &AppHandle) {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 enum TimerStatus {
@@ -124,7 +163,7 @@ pub fn start_timer(
             if remaining == 0 {
                 timer.status = TimerStatus::Idle;
                 send_notification(&app, "時間になりました！");
-                    
+                flash_taskbar(&app);
                 timer.end_at = None;
                 emit_tick(&app, remaining);
                 emit_status(&app, TimerStatus::Idle);
