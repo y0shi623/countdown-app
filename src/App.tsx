@@ -12,9 +12,15 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { LogicalSize } from '@tauri-apps/api/dpi';
 import { TimerClockIcon } from "./Icon";
 
 const appWindow = getCurrentWindow();
+
+const WINDOW_WIDTH = 400;
+const WINDOW_HEIGHT_FULL = 272;
+const WINDOW_HEIGHT_SIMPLE = 112;
+const COLLAPSE_DURATION_MS = 250;
 
 const theme = createTheme({
   palette: {
@@ -121,7 +127,15 @@ const TimerApp = () => {
               size="small"
               sx={{padding:0}}
               onClick={() => {
-                setIsSimpleBar(!isSimpleBar);
+                const next = !isSimpleBar;
+                setIsSimpleBar(next);
+                if (next) {
+                  setTimeout(() => {
+                    appWindow.setSize(new LogicalSize(WINDOW_WIDTH, WINDOW_HEIGHT_SIMPLE));
+                  }, COLLAPSE_DURATION_MS);
+                } else {
+                  appWindow.setSize(new LogicalSize(WINDOW_WIDTH, WINDOW_HEIGHT_FULL));
+                }
               }}
               color="inherit"
             >
