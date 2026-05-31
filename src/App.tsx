@@ -1,4 +1,4 @@
-import { Container, Stack,  Button, Typography, CssBaseline, IconButton, Tooltip, ThemeProvider, createTheme, Zoom, Box, Collapse} from "@mui/material";
+import { Container, Stack, Button, Typography, CssBaseline, IconButton, Tooltip, ThemeProvider, createTheme, Zoom, Box, Collapse, LinearProgress } from "@mui/material";
 import PlayIcon from '@mui/icons-material/PlayArrow';
 import CloseIcon from '@mui/icons-material/Close';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -93,8 +93,17 @@ const TimerApp = () => {
   const [notifyLeaveMinutesErrors, setNotifyLeaveMinutesErrors] = useState<(string | undefined)[]>([undefined, undefined]);
   const [isAlwaysOnTop, setIsAlwaysOnTop] = useState<boolean>(false);
   const [isSimpleBar, setIsSimpleBar] = useState<boolean>(false);
+  const [isResizing, setIsResizing] = useState<boolean>(false);
+  const [totalSec, setTotalSec] = useState<number>(0);
 
   const timer = useTimer();
+
+  const progressValue = totalSec > 0 ? (timer.leaveSec / totalSec) * 100 : 100;
+  const progressColor =
+    totalSec === 0 ? '#FFF' :
+    progressValue > 50 ? '#24C8A6' :
+    progressValue > 20 ? '#f4d472' :
+    '#f44336';
 
   const validateTimerSetting = () => {
     // タイマー設定が残り時間通知設定より値が小さくないか？
@@ -126,15 +135,19 @@ const TimerApp = () => {
             <IconButton
               size="small"
               sx={{padding:0}}
-              onClick={() => {
+              onClick={async () => {
+                if (isResizing) return;
                 const next = !isSimpleBar;
+                setIsResizing(true);
                 setIsSimpleBar(next);
                 if (next) {
-                  setTimeout(() => {
-                    appWindow.setSize(new LogicalSize(WINDOW_WIDTH, WINDOW_HEIGHT_SIMPLE));
+                  setTimeout(async () => {
+                    await appWindow.setSize(new LogicalSize(WINDOW_WIDTH, WINDOW_HEIGHT_SIMPLE));
+                    setIsResizing(false);
                   }, COLLAPSE_DURATION_MS);
                 } else {
-                  appWindow.setSize(new LogicalSize(WINDOW_WIDTH, WINDOW_HEIGHT_FULL));
+                  await appWindow.setSize(new LogicalSize(WINDOW_WIDTH, WINDOW_HEIGHT_FULL));
+                  setIsResizing(false);
                 }
               }}
               color="inherit"
@@ -187,7 +200,24 @@ const TimerApp = () => {
             </IconButton>
           </Stack>
         </Stack>
-        <Container maxWidth="md" sx={{padding: '0px'}}>
+        <Container maxWidth="md" sx={{ padding: '0px', position: 'relative' }}>
+          <LinearProgress
+            variant="determinate"
+            value={progressValue}
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 8,
+              borderRadius: 0,
+              backgroundColor: 'rgba(0,0,0,0.08)',
+              '& .MuiLinearProgress-bar': {
+                backgroundColor: progressColor,
+                transition: 'transform 0.9s linear, background-color 0.5s ease',
+              },
+            }}
+          />
           <Stack padding={2} spacing={1}>
             <Stack direction={'row'} justifyContent={'space-between'} alignItems={'center'}>
               <Stack direction={'row'} spacing={1} alignItems={'center'}>
@@ -201,6 +231,7 @@ const TimerApp = () => {
                         if (validateTimerSetting()) {
                           resetErrorState();
                           timer.start(minutes, notifyLeaveMinutes.filter((v) => v !== undefined));
+                          setTotalSec(minutes * 60);
                         }
                       } else if (timer.status === 'Paused') {
                         timer.resume();
@@ -225,7 +256,7 @@ const TimerApp = () => {
                     disabled={timer.status === 'Idle'}
                     variant="contained"
                     color="error"
-                    onClick={() => timer.stop()}
+                    onClick={() => { timer.stop(); setTotalSec(0); }}
                   >
                     <StopIcon/>
                   </Button>
